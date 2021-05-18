@@ -138,7 +138,7 @@ public class Manager extends Thread
 		case LOGGINGIN:
 			return ChatFormatting.GREEN + "Logging in...";
 		case LOGGEDIN:
-			return ChatFormatting.GREEN + "You are currently logged in as " + ChatFormatting.GOLD + getPlayerName( );
+			return ChatFormatting.GREEN + "You are currently logged as " + ChatFormatting.GOLD + getPlayerName( );
 		case ERROR:
 			return ChatFormatting.RED + "There was an error while trying to log in";
 		default:
