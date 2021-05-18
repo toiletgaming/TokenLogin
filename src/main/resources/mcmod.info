@@ -1,0 +1,16 @@
+[
+{
+  "modid": "tokenlogin",
+  "name": "TokenLogin",
+  "description": "Mod that authenticates you in Minecraft using access tokens",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://github.com/toiletgaming/TokenLogin",
+  "updateUrl": "",
+  "authorList": ["mrnv/ayywareseller"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

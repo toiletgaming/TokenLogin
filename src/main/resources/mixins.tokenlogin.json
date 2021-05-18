@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "package": "fuck.you.tokenlogin.mixins",
+  "refmap": "mixins.tokenlogin.refmap.json",
+  "mixins": [
+    "MixinGuiMainMenu",
+    "MixinMinecraft"
+  ]
+}
