@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import fuck.you.tokenlogin.gui.GuiTokenLogin;
+import fuck.you.tokenlogin.gui.GuiAltManager;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
@@ -23,6 +23,6 @@ public class MixinGuiMainMenu extends GuiScreen
 	public void actionPerformed( GuiButton button, CallbackInfo info )
 	{
 		if( button.id == 93543 )
-			mc.displayGuiScreen( new GuiTokenLogin( ) );
+			mc.displayGuiScreen( new GuiAltManager( ) );
 	}
 }

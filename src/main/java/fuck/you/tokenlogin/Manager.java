@@ -20,6 +20,7 @@ public class Manager extends Thread
 	private State state = State.LOGGEDIN;
 	private String username;
 	private String accessToken;
+	private String clientToken;
 	
 	@Override
 	public void run( )
@@ -29,18 +30,56 @@ public class Manager extends Thread
 			if( this.state == State.LOGGINGIN )
 			{
 				boolean good = false;
+				boolean uuidfail = false;
 				
 				try
 				{
-					if( isTokenValid( ) )
+					if( !isTokenValid( ) )
+					{
+						if( clientToken != null && clientToken.length( ) > 0 )
+						{
+							this.state = State.ERROR_PRE;
+							
+							if( refreshToken( ) )
+							{
+								Main.getLogger( ).info( "Refreshed access token of " + username );
+								good = true;
+							}
+						}
+					}
+					else
+						good = true;
+					
+					if( good )
 					{
 						String uuid = getUUID( username );
 						if( uuid != null )
 						{
-							Session session = new Session( username, uuid, accessToken, "mojang" );
-							( ( IMinecraft )Minecraft.getMinecraft( ) ).setClientSession( session );
+							changeSession( uuid );
 							
-							good = true;
+							// save new access token
+							Account account = null;
+							for( Account _account : Main.getAltManager( ).getAccounts( ) )
+							{
+								if( _account.username.equalsIgnoreCase( username ) )
+								{
+									account = _account;
+									break;
+								}
+							}
+							
+							if( account != null )
+							{
+								Main.getAltManager( ).getAccounts( ).remove( account );
+								account.accessToken = accessToken;
+								Main.getAltManager( ).addAccount( account );
+							}
+						}
+						else
+						{
+							good = false;
+							uuidfail = true;
+							this.state = State.ERROR_UUID;
 						}
 					}
 				}
@@ -51,11 +90,15 @@ public class Manager extends Thread
 				
 				this.username = "";
 				this.accessToken = "";
+				this.clientToken = "";
 				
 				if( good )
 					this.state = State.LOGGEDIN;
 				else
-					this.state = State.ERROR;
+				{
+					if( !uuidfail )
+						this.state = State.ERROR;
+				}
 			}
 			
 			try
@@ -67,6 +110,12 @@ public class Manager extends Thread
 				e.printStackTrace( );
 			}
 		}
+	}
+	
+	public void changeSession( String uuid )
+	{
+		Session session = new Session( username, uuid, accessToken, "mojang" );
+		( ( IMinecraft )Minecraft.getMinecraft( ) ).setClientSession( session );
 	}
 	
 	public String getUUID( String username )
@@ -120,7 +169,48 @@ public class Manager extends Thread
 		return false;
 	}
 	
-	public void login( String username, String accessToken )
+	public boolean refreshToken( )
+	{
+		try
+		{
+			JsonObject json = new JsonObject( );
+			json.addProperty( "accessToken", accessToken );
+			json.addProperty( "clientToken", clientToken );
+			
+			HttpURLConnection connection = ( HttpURLConnection )new URL( "https://authserver.mojang.com/refresh" ).openConnection( );
+			connection.setRequestMethod( "POST" );
+			connection.setRequestProperty( "Content-Type", "application/json" );
+			connection.setDoOutput( true );
+			
+			OutputStream os = connection.getOutputStream( );
+			os.write( json.toString( ).getBytes( StandardCharsets.UTF_8 ) );
+			
+			if( connection.getResponseCode( ) == 403 ) return false;
+			
+			BufferedReader reader = new BufferedReader( new InputStreamReader( connection.getInputStream( ) ) );
+			StringBuilder sb = new StringBuilder( );
+			
+			String line = "";
+			while( ( line = reader.readLine( ) ) != null )
+				sb.append( line );
+			reader.close( );
+			connection.disconnect( );
+			
+			JsonObject parsed = new JsonParser( ).parse( sb.toString( ) ).getAsJsonObject( );
+			if( parsed.get( "error" ) != null ) return false;
+			
+			accessToken = parsed.get( "accessToken" ).getAsString( );
+			return true;
+		}
+		catch( Exception e )
+		{
+			e.printStackTrace( );
+		}
+		
+		return false;
+	}
+	
+	public void login( String username, String accessToken, String clientToken )
 	{
 		if( username == null || accessToken == null ||
 			username.equals( "" ) || accessToken.equals( "" ) )
@@ -128,6 +218,7 @@ public class Manager extends Thread
 		
 		this.username = username;
 		this.accessToken = accessToken;
+		this.clientToken = clientToken;
 		this.state = State.LOGGINGIN;
 	}
 	
@@ -136,14 +227,23 @@ public class Manager extends Thread
 		switch( state )
 		{
 		case LOGGINGIN:
-			return ChatFormatting.GREEN + "Logging in...";
+			return "Logging in...";
 		case LOGGEDIN:
-			return ChatFormatting.GREEN + "You are currently logged in as " + ChatFormatting.GOLD + getPlayerName( );
+			return "Currently logged in as " + ChatFormatting.GREEN + getPlayerName( );
+		case ERROR_PRE:
+			return ChatFormatting.YELLOW + "Trying to refresh access token using client token";
+		case ERROR_UUID:
+			return ChatFormatting.RED + "Failed to get UUID";
 		case ERROR:
-			return ChatFormatting.RED + "There was an error while trying to log in";
+			return ChatFormatting.RED + "Invalid access token";
 		default:
 			return ChatFormatting.RED + "You shouldn't be able to see this";
 		}
+	}
+	
+	public void resetState( )
+	{
+		this.state = State.LOGGEDIN;
 	}
 	
 	public String getPlayerName( )
@@ -162,6 +262,8 @@ public class Manager extends Thread
 	{
 		LOGGEDIN,
 		LOGGINGIN,
+		ERROR_PRE,
+		ERROR_UUID,
 		ERROR
 	}
 }
