@@ -6,4 +6,5 @@ Minecraft Forge 1.12.2 mod that authenticates you in Minecraft using access toke
 
 # Screenshots
 ![](https://i.imgur.com/EfQmDhZ.png)
-![](https://i.imgur.com/P3cCwuJ.png)
+![](https://i.imgur.com/edXIXBn.png)
+![](https://i.imgur.com/WXAxtZJ.png)

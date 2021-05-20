@@ -66,7 +66,7 @@ public class GuiEditAccount extends GuiScreen
 		
 		int midwidth = this.width / 2;
 
-		this.drawCenteredString( this.fontRenderer, "Edit Account", midwidth, this.height / 4, -1 );
+		this.drawCenteredString( this.fontRenderer, "Edit Account", midwidth, this.username.y - 45, -1 );
 		
 		this.drawCenteredString( this.fontRenderer, "Username", midwidth, this.username.y - mc.fontRenderer.FONT_HEIGHT - 4, -1 );
 		this.drawCenteredString( this.fontRenderer, "Access Token", midwidth, this.accessToken.y - mc.fontRenderer.FONT_HEIGHT - 4, -1 );
